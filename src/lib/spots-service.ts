@@ -29,8 +29,25 @@ export type Claim = {
   createdAt: string;
 };
 
+export type FounderProfile = {
+  name: string;
+  title: string;
+  location: string;
+  avatarUrl?: string | undefined;
+  tags?: string[] | undefined;
+};
+
+export const DEFAULT_PROFILE: FounderProfile = {
+  name: "Robinson Sánchez Sena",
+  title: "Venture Builder & Estratega",
+  location: "Santo Domingo, República Dominicana",
+  avatarUrl: "",
+  tags: ["Fintech", "Healthtech", "Marketing Ops"],
+};
+
 const SPOTS_CACHE_KEY = "brandmymac_spots_v2";
 const CLAIMS_CACHE_KEY = "brandmymac_claims_v2";
+const PROFILE_CACHE_KEY = "brandmymac_profile_v1";
 
 // Local storage helpers for robust fallback and immediate offline reliability
 function getLocalSpots(): Spot[] {
@@ -282,3 +299,76 @@ export async function resetDatabase() {
     console.warn("Firestore resetDatabase sync:", err);
   }
 }
+
+function getLocalProfile(): FounderProfile {
+  if (typeof window === "undefined") return DEFAULT_PROFILE;
+  try {
+    const data = localStorage.getItem(PROFILE_CACHE_KEY);
+    if (data) return JSON.parse(data);
+  } catch (e) {
+    console.error("Error reading local profile:", e);
+  }
+  return DEFAULT_PROFILE;
+}
+
+function saveLocalProfile(profile: FounderProfile) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
+  } catch (e) {
+    console.error("Error saving local profile:", e);
+  }
+}
+
+/**
+ * Escucha cambios en tiempo real del perfil del fundador desde Firestore / LocalStorage
+ */
+export function subscribeToProfile(onUpdate: (profile: FounderProfile) => void) {
+  onUpdate(getLocalProfile());
+
+  try {
+    const profileRef = doc(db, "settings", "profile");
+    const unsub = onSnapshot(
+      profileRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data() as FounderProfile;
+          const merged: FounderProfile = {
+            ...DEFAULT_PROFILE,
+            ...data,
+          };
+          saveLocalProfile(merged);
+          onUpdate(merged);
+        }
+      },
+      (error) => {
+        console.warn("Firestore profile warning:", error.message);
+        onUpdate(getLocalProfile());
+      },
+    );
+    return unsub;
+  } catch (err) {
+    console.warn("Could not attach profile listener:", err);
+    return () => {};
+  }
+}
+
+/**
+ * Actualiza el perfil del fundador (incluyendo URL de foto de avatar)
+ */
+export async function updateProfile(data: Partial<FounderProfile>) {
+  const current = getLocalProfile();
+  const updated: FounderProfile = {
+    ...current,
+    ...data,
+  };
+  saveLocalProfile(updated);
+
+  try {
+    const profileRef = doc(db, "settings", "profile");
+    await setDoc(profileRef, updated, { merge: true });
+  } catch (err) {
+    console.warn("Firestore updateProfile sync:", err);
+  }
+}
+

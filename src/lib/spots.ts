@@ -212,7 +212,7 @@ export const SPOTS: Spot[] = [
 
 export const ACTIVITY = [
   "¡18 espacios listos para tu marca! Asegura tu sticker en la MacBook hoy.",
-  "Tu logo viajará en una MacBook Pro por eventos, cafés y espacios de coworking.",
+  "Tu logo viajará en una MacBook Air M5 por eventos, cafés y espacios de coworking.",
   "Espacios disponibles en la tapa exterior y alrededor del teclado desde RD$1,000.",
 ];
 

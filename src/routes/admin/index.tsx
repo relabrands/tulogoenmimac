@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowUpRight,
+  Camera,
   Check,
   ExternalLink,
   Laptop,
@@ -16,6 +17,7 @@ import {
   Search,
   Shield,
   Trash2,
+  User,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -52,8 +54,12 @@ import {
   updateSpot,
   updateClaimStatus,
   resetDatabase,
+  subscribeToProfile,
+  updateProfile,
+  DEFAULT_PROFILE,
   type Claim,
   type ClaimStatus,
+  type FounderProfile,
 } from "@/lib/spots-service";
 
 export const Route = createFileRoute("/admin/")({
@@ -69,7 +75,11 @@ function AdminDashboard() {
 
   const [spots, setSpots] = useState<Spot[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
-  const [activeTab, setActiveTab] = useState<"solicitudes" | "espacios" | "mantenimiento">("solicitudes");
+  const [activeTab, setActiveTab] = useState<"solicitudes" | "espacios" | "perfil" | "mantenimiento">("solicitudes");
+
+  // Perfil del fundador
+  const [profileForm, setProfileForm] = useState<FounderProfile>(DEFAULT_PROFILE);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Filtros de solicitudes
   const [claimsFilter, setClaimsFilter] = useState<"todas" | ClaimStatus>("todas");
@@ -104,11 +114,27 @@ function AdminDashboard() {
   useEffect(() => {
     const unsubSpots = subscribeToSpots(setSpots);
     const unsubClaims = subscribeToClaims(setClaims);
+    const unsubProfile = subscribeToProfile(setProfileForm);
     return () => {
       if (typeof unsubSpots === "function") unsubSpots();
       if (typeof unsubClaims === "function") unsubClaims();
+      if (typeof unsubProfile === "function") unsubProfile();
     };
   }, []);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      await updateProfile(profileForm);
+      toast.success("¡Perfil actualizado con éxito! La foto y datos se actualizaron en la web.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al actualizar el perfil.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   // Abrir modal de edición para un espacio
   const openEditModal = (spot: Spot) => {
@@ -355,7 +381,7 @@ function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-xl">
             <TabsTrigger value="solicitudes" className="relative">
               Solicitudes
               {stats.pendingClaims > 0 && (
@@ -365,6 +391,7 @@ function AdminDashboard() {
               )}
             </TabsTrigger>
             <TabsTrigger value="espacios">Espacios (18)</TabsTrigger>
+            <TabsTrigger value="perfil">Mi Perfil</TabsTrigger>
             <TabsTrigger value="mantenimiento">Mantenimiento</TabsTrigger>
           </TabsList>
 
@@ -686,7 +713,137 @@ function AdminDashboard() {
             </div>
           </TabsContent>
 
-          {/* TAB 3: MANTENIMIENTO */}
+          {/* TAB 3: MI PERFIL */}
+          <TabsContent value="perfil" className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">Foto y Perfil de Robinson Sánchez Sena</h2>
+              <p className="text-sm text-muted-foreground">
+                Configura tu foto de perfil (avatar) y datos visibles en la sección "Sobre mí" de la página principal.
+              </p>
+            </div>
+
+            <Card className="border-border max-w-2xl">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Foto y Datos del Fundador
+                </CardTitle>
+                <CardDescription>
+                  Si dejas la URL de imagen vacía, se mostrará el monograma de iniciales "RS" automáticamente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Vista previa del avatar */}
+                <div className="flex items-center gap-5 p-4 rounded-xl border border-border bg-secondary/30">
+                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-secondary border border-border text-foreground font-mono text-2xl font-bold overflow-hidden shadow-inner">
+                    {profileForm.avatarUrl ? (
+                      <img
+                        src={profileForm.avatarUrl}
+                        alt="Foto de perfil"
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span>RS</span>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-semibold text-sm">Vista previa del avatar</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {profileForm.avatarUrl
+                        ? "Foto personalizada activa."
+                        : "Sin foto cargada (mostrando iniciales RS)."}
+                    </p>
+                    {profileForm.avatarUrl && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setProfileForm((prev) => ({ ...prev, avatarUrl: "" }))}
+                        className="mt-2 h-7 text-xs text-destructive hover:bg-destructive/10"
+                      >
+                        Quitar foto (volver a RS)
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="prof-avatar" className="flex items-center gap-1.5">
+                      <Camera className="h-4 w-4 text-muted-foreground" />
+                      URL de la imagen o foto de perfil
+                    </Label>
+                    <Input
+                      id="prof-avatar"
+                      placeholder="https://ejemplo.com/tu-foto.jpg"
+                      value={profileForm.avatarUrl || ""}
+                      onChange={(e) =>
+                        setProfileForm((prev) => ({ ...prev, avatarUrl: e.target.value }))
+                      }
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Ingresa el enlace directo a tu fotografía (formato JPG, PNG o WebP de LinkedIn, Cloudinary, etc.).
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="prof-name">Nombre completo</Label>
+                    <Input
+                      id="prof-name"
+                      value={profileForm.name}
+                      onChange={(e) =>
+                        setProfileForm((prev) => ({ ...prev, name: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="prof-title">Cargo / Rol</Label>
+                    <Input
+                      id="prof-title"
+                      value={profileForm.title}
+                      onChange={(e) =>
+                        setProfileForm((prev) => ({ ...prev, title: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="prof-location">Ubicación</Label>
+                    <Input
+                      id="prof-location"
+                      value={profileForm.location}
+                      onChange={(e) =>
+                        setProfileForm((prev) => ({ ...prev, location: e.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+
+                  <Button type="submit" disabled={savingProfile} className="gap-2">
+                    {savingProfile ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Guardando cambios...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Guardar Perfil
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 4: MANTENIMIENTO */}
           <TabsContent value="mantenimiento" className="space-y-6">
             <div>
               <h2 className="text-xl font-bold tracking-tight">Mantenimiento y Control de Datos</h2>

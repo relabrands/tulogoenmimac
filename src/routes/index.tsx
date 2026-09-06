@@ -20,7 +20,12 @@ import { MacSurface } from "@/components/mac/MacSurface";
 import { ClaimDialog } from "@/components/mac/ClaimDialog";
 import { LiveTicker } from "@/components/mac/LiveTicker";
 import { GOAL, SPOTS, currency, type Spot, type SpotView } from "@/lib/spots";
-import { subscribeToSpots } from "@/lib/spots-service";
+import {
+  subscribeToSpots,
+  subscribeToProfile,
+  DEFAULT_PROFILE,
+  type FounderProfile,
+} from "@/lib/spots-service";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -30,7 +35,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Consigue un espacio exclusivo para tu logo en una MacBook Pro en Santo Domingo. Espacios en la tapa exterior y teclado desde RD$1,000.",
+          "Consigue un espacio exclusivo para tu logo en una MacBook Air M5 en Santo Domingo. Espacios en la tapa exterior y teclado desde RD$1,000.",
       },
       { property: "og:title", content: "Tu Logo en mi Mac — Tu marca en la MacBook de un fundador" },
       {
@@ -47,15 +52,20 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [spots, setSpots] = useState<Spot[]>(SPOTS);
+  const [profile, setProfile] = useState<FounderProfile>(DEFAULT_PROFILE);
   const [view, setView] = useState<SpotView>("lid");
   const [selected, setSelected] = useState<Spot | null>(null);
 
   useEffect(() => {
-    const unsub = subscribeToSpots((liveSpots) => {
+    const unsubSpots = subscribeToSpots((liveSpots) => {
       setSpots(liveSpots);
     });
+    const unsubProfile = subscribeToProfile((liveProfile) => {
+      setProfile(liveProfile);
+    });
     return () => {
-      if (typeof unsub === "function") unsub();
+      if (typeof unsubSpots === "function") unsubSpots();
+      if (typeof unsubProfile === "function") unsubProfile();
     };
   }, []);
 
@@ -109,7 +119,7 @@ function Index() {
             Tu marca, en mi Mac.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Tu logo viaja conmigo en la herramienta de trabajo más visible de un creador: una MacBook Pro que visita cafés, eventos tech, coworkings y reuniones a diario.
+            Tu logo viaja conmigo en la herramienta de trabajo más visible de un creador: una MacBook Air M5 que visita cafés, eventos tech, coworkings y reuniones a diario.
           </p>
 
           <div className="mx-auto mt-10 max-w-lg">
@@ -269,23 +279,27 @@ function Index() {
             <div className="grid gap-10 lg:grid-cols-[280px_1fr] items-start">
               {/* Tarjeta de Perfil */}
               <div className="rounded-2xl border border-border bg-card p-6 shadow-sm text-center lg:text-left">
-                <div className="mx-auto lg:mx-0 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary border border-border text-foreground font-mono text-xl font-bold mb-4 shadow-inner">
-                  RS
+                <div className="mx-auto lg:mx-0 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary border border-border text-foreground font-mono text-xl font-bold mb-4 shadow-inner overflow-hidden">
+                  {profile.avatarUrl ? (
+                    <img
+                      src={profile.avatarUrl}
+                      alt={profile.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span>RS</span>
+                  )}
                 </div>
-                <h3 className="text-xl font-bold tracking-tight">Robinson Sánchez Sena</h3>
-                <p className="text-sm text-primary font-medium mt-1">Venture Builder & Estratega</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Santo Domingo, República Dominicana</p>
+                <h3 className="text-xl font-bold tracking-tight">{profile.name}</h3>
+                <p className="text-sm text-primary font-medium mt-1">{profile.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{profile.location}</p>
 
                 <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-1.5 justify-center lg:justify-start">
-                  <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
-                    Fintech
-                  </span>
-                  <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
-                    Healthtech
-                  </span>
-                  <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
-                    Marketing Ops
-                  </span>
+                  {(profile.tags && profile.tags.length > 0 ? profile.tags : ["Fintech", "Healthtech", "Marketing Ops"]).map((tag) => (
+                    <span key={tag} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               </div>
 
@@ -307,14 +321,11 @@ function Index() {
                   <p>
                     Su trabajo destaca principalmente en los sectores de tecnología financiera (<span className="text-foreground font-medium">fintech</span>), salud digital (<span className="text-foreground font-medium">healthtech</span>) y marketing operativo.
                   </p>
-                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-foreground text-sm font-medium flex items-center gap-3">
-                    <Sparkles className="h-5 w-5 text-primary shrink-0" />
-                    <span>
-                      Actualmente impulsando <strong>Nomi</strong>, la primera plataforma de bienestar financiero de la República Dominicana.
-                    </span>
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-foreground text-sm font-medium">
+                    Actualmente impulsando <strong>Nomi</strong>, la primera plataforma de bienestar financiero de la República Dominicana.
                   </div>
                   <p className="text-sm">
-                    Esta MacBook Pro me acompaña a diario a reuniones de negocios, eventos del ecosistema de tecnología, espacios de coworking, cafés y conferencias en Santo Domingo. Cada sticker colocado en este equipo es una vitrina en movimiento con exposición real ante fundadores, líderes de opinión y potenciales clientes.
+                    Esta MacBook Air M5 me acompaña a diario a reuniones de negocios, eventos del ecosistema de tecnología, espacios de coworking, cafés y conferencias en Santo Domingo. Cada sticker colocado en este equipo es una vitrina en movimiento con exposición real ante fundadores, líderes de opinión y potenciales clientes.
                   </p>
                 </div>
               </div>
@@ -339,7 +350,7 @@ function Index() {
 
           <div className="pt-4 border-t border-border/60">
             <p className="text-xs text-muted-foreground leading-relaxed max-w-3xl">
-              Brand My Mac / Tu Logo en mi Mac no está afiliado, respaldado ni patrocinado por Apple Inc. MacBook Pro y Mac son marcas comerciales registradas de Apple Inc.
+              Tu Logo en mi Mac no está afiliado, respaldado ni patrocinado por Apple Inc. MacBook Air M5 y Mac son marcas comerciales registradas de Apple Inc.
             </p>
           </div>
         </div>
