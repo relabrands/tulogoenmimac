@@ -14,7 +14,7 @@ export function BrandTile({ brand, compact }: { brand: NonNullable<Spot["brand"]
       <span
         className={cn(
           "font-semibold leading-tight tracking-tight",
-          compact ? "text-[8px] leading-[1.1] sm:text-[10px]" : "text-xs sm:text-sm",
+          compact ? "text-[9px] leading-[1.1] sm:text-[11px]" : "text-xs sm:text-sm",
         )}
       >
         {brand.name}

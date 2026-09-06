@@ -102,7 +102,7 @@ function Index() {
         </section>
 
         {/* Surface */}
-        <section id="surface" className="mx-auto max-w-3xl px-5 pb-20">
+        <section id="surface" className="mx-auto max-w-4xl px-5 pb-20">
           <div className="mb-6 flex justify-center">
             <div className="inline-flex rounded-full border border-border bg-card p-1">
               {(["lid", "inside"] as SpotView[]).map((v) => (

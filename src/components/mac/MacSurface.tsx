@@ -33,68 +33,70 @@ function Face({
   }, [image]);
 
   return (
-    <div className={cn("absolute inset-0 [backface-visibility:hidden]", className)}>
-      <img
-        src={currentSrc}
-        alt={alt}
-        draggable={false}
-        onError={() => {
-          if (fallbackImage && currentSrc !== fallbackImage) {
-            setCurrentSrc(fallbackImage);
-          }
-        }}
-        className="h-full w-full select-none rounded-2xl object-contain sm:rounded-3xl"
-      />
-      {spots.map((spot) => {
-        const taken = Boolean(spot.brand);
-        return (
-          <button
-            key={spot.id}
-            type="button"
-            tabIndex={interactive ? 0 : -1}
-            onClick={() => !taken && onSelect(spot)}
-            disabled={taken || !interactive}
-            aria-label={
-              taken
-                ? `${spot.name} — taken by ${spot.brand?.name}`
-                : `Claim ${spot.name} from ${currency(spot.price)}`
+    <div className={cn("absolute inset-0 flex items-center justify-center [backface-visibility:hidden]", className)}>
+      <div className="relative w-full">
+        <img
+          src={currentSrc}
+          alt={alt}
+          draggable={false}
+          onError={() => {
+            if (fallbackImage && currentSrc !== fallbackImage) {
+              setCurrentSrc(fallbackImage);
             }
-            style={{
-              left: `${spot.pos.x}%`,
-              top: `${spot.pos.y}%`,
-              width: `${spot.pos.w}%`,
-              height: `${spot.pos.h}%`,
-            }}
-            className={cn(
-              "group absolute flex flex-col items-center justify-center overflow-hidden rounded-md p-0.5 sm:rounded-lg sm:p-1 transition",
-              taken
-                ? "cursor-default bg-card/90 ring-1 ring-border backdrop-blur-sm"
-                : "cursor-pointer border-2 border-dashed border-card/60 bg-background/75 backdrop-blur-sm hover:border-card hover:bg-background",
-            )}
-          >
-            {taken ? (
-              <>
-                <div className="h-[66%] w-full">
-                  <BrandTile brand={spot.brand!} compact />
-                </div>
-                <span className="mt-0.5 font-mono text-[8px] text-muted-foreground sm:text-[10px]">
-                  {currency(spot.price)}
-                </span>
-              </>
-            ) : (
-              <>
-                <Plus className="h-3 w-3 text-muted-foreground transition group-hover:text-foreground sm:h-3.5 sm:w-3.5" />
-                <span className="mt-0.5 hidden text-[9px] font-medium leading-tight text-muted-foreground sm:block">
-                  {spot.size} · {spot.dims}
-                </span>
-                <span className="font-mono text-[8px] leading-tight text-foreground sm:text-[10px]">
-                  {currency(spot.price)}
-                </span>
-              </>
-            )}
-          </button>
-        );
-      })}
+          }}
+          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl"
+        />
+        {spots.map((spot) => {
+          const taken = Boolean(spot.brand);
+          return (
+            <button
+              key={spot.id}
+              type="button"
+              tabIndex={interactive ? 0 : -1}
+              onClick={() => !taken && onSelect(spot)}
+              disabled={taken || !interactive}
+              aria-label={
+                taken
+                  ? `${spot.name} — taken by ${spot.brand?.name}`
+                  : `Claim ${spot.name} from ${currency(spot.price)}`
+              }
+              style={{
+                left: `${spot.pos.x}%`,
+                top: `${spot.pos.y}%`,
+                width: `${spot.pos.w}%`,
+                height: `${spot.pos.h}%`,
+              }}
+              className={cn(
+                "group absolute flex flex-col items-center justify-center overflow-hidden rounded-md p-0.5 sm:rounded-lg sm:p-1 transition shadow-sm",
+                taken
+                  ? "cursor-default bg-card/90 ring-1 ring-border backdrop-blur-sm"
+                  : "cursor-pointer border-2 border-dashed border-card/60 bg-background/75 backdrop-blur-sm hover:border-card hover:bg-background",
+              )}
+            >
+              {taken ? (
+                <>
+                  <div className="h-[66%] w-full">
+                    <BrandTile brand={spot.brand!} compact />
+                  </div>
+                  <span className="mt-0.5 font-mono text-[8px] text-muted-foreground sm:text-[10px]">
+                    {currency(spot.price)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Plus className="h-3 w-3 text-muted-foreground transition group-hover:text-foreground sm:h-3.5 sm:w-3.5" />
+                  <span className="mt-0.5 hidden text-[9px] font-medium leading-tight text-muted-foreground sm:block">
+                    {spot.size} · {spot.dims}
+                  </span>
+                  <span className="font-mono text-[8px] leading-tight text-foreground sm:text-[10px]">
+                    {currency(spot.price)}
+                  </span>
+                </>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -159,7 +161,7 @@ export function MacSurface({
       >
         <div
           className={cn(
-            "relative aspect-[4/3] w-full [transform-style:preserve-3d]",
+            "relative aspect-[1.5] w-full [transform-style:preserve-3d]",
             dragging ? "cursor-grabbing" : "cursor-grab transition-transform duration-700 ease-out",
           )}
           style={{ transform: `rotateY(${angle}deg)` }}

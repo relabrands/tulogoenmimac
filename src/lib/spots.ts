@@ -128,7 +128,7 @@ export const SPOTS: Spot[] = [
     size: "M",
     dims: "4 × 3 cm",
     price: 1800,
-    pos: { x: 12, y: 59.5, w: 9.5, h: 12 },
+    pos: { x: 9.5, y: 63.0, w: 10, h: 14.5 },
     brand: { name: "Sixtyfold", tone: "light" },
   },
   {
@@ -138,7 +138,7 @@ export const SPOTS: Spot[] = [
     size: "M",
     dims: "4 × 3 cm",
     price: 2400,
-    pos: { x: 22.5, y: 59.5, w: 9.5, h: 12 },
+    pos: { x: 20.7, y: 63.0, w: 10, h: 14.5 },
     brand: { name: "Qurso", tone: "outline" },
   },
   {
@@ -148,7 +148,7 @@ export const SPOTS: Spot[] = [
     size: "M",
     dims: "4 × 3 cm",
     price: 1800,
-    pos: { x: 12, y: 73.5, w: 9.5, h: 12 },
+    pos: { x: 9.5, y: 79.5, w: 10, h: 14.5 },
     brand: { name: "Developer Timeline", tone: "dark" },
   },
   {
@@ -158,7 +158,7 @@ export const SPOTS: Spot[] = [
     size: "S",
     dims: "3 × 2 cm",
     price: 1000,
-    pos: { x: 22.5, y: 73.5, w: 9.5, h: 12 },
+    pos: { x: 20.7, y: 79.5, w: 10, h: 14.5 },
   },
   {
     id: 13,
@@ -167,7 +167,7 @@ export const SPOTS: Spot[] = [
     size: "S",
     dims: "3 × 2 cm",
     price: 1000,
-    pos: { x: 68, y: 59.5, w: 9.5, h: 12 },
+    pos: { x: 69.3, y: 63.0, w: 10, h: 14.5 },
   },
   {
     id: 14,
@@ -176,7 +176,7 @@ export const SPOTS: Spot[] = [
     size: "M",
     dims: "4 × 3 cm",
     price: 2200,
-    pos: { x: 78.5, y: 59.5, w: 9.5, h: 12 },
+    pos: { x: 80.5, y: 63.0, w: 10, h: 14.5 },
     brand: { name: "Product Mafia", tone: "dark" },
   },
   {
@@ -186,7 +186,7 @@ export const SPOTS: Spot[] = [
     size: "S",
     dims: "3 × 2 cm",
     price: 1000,
-    pos: { x: 68, y: 73.5, w: 9.5, h: 12 },
+    pos: { x: 69.3, y: 79.5, w: 10, h: 14.5 },
   },
   {
     id: 18,
@@ -195,7 +195,7 @@ export const SPOTS: Spot[] = [
     size: "M",
     dims: "4 × 3 cm",
     price: 1800,
-    pos: { x: 78.5, y: 73.5, w: 9.5, h: 12 },
+    pos: { x: 80.5, y: 79.5, w: 10, h: 14.5 },
     brand: { name: "Botpool", tone: "outline" },
   },
 ];
