@@ -5,12 +5,11 @@ import {
   ArrowRight,
   Briefcase,
   ExternalLink,
-  Github,
   Instagram,
   Laptop,
+  Linkedin,
   MousePointerClick,
   Sparkles,
-  Twitter,
   Upload,
   UserCheck,
 } from "lucide-react";
@@ -301,6 +300,28 @@ function Index() {
                     </span>
                   ))}
                 </div>
+
+                <div className="mt-4 pt-4 border-t border-border flex items-center justify-center lg:justify-start gap-3 text-muted-foreground">
+                  <a
+                    href="https://www.instagram.com/robinsonnsanchez/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs hover:text-foreground transition-colors"
+                  >
+                    <Instagram className="h-3.5 w-3.5" />
+                    <span>Instagram</span>
+                  </a>
+                  <span className="text-muted-foreground/40">·</span>
+                  <a
+                    href="https://do.linkedin.com/in/robinsonsanchez"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs hover:text-foreground transition-colors"
+                  >
+                    <Linkedin className="h-3.5 w-3.5" />
+                    <span>LinkedIn</span>
+                  </a>
+                </div>
               </div>
 
               {/* Biografía y propósito */}
@@ -325,7 +346,7 @@ function Index() {
                     Actualmente impulsando <strong>Nomi</strong>, la primera plataforma de bienestar financiero de la República Dominicana.
                   </div>
                   <p className="text-sm">
-                    Esta MacBook Air M5 me acompaña a diario a reuniones de negocios, eventos del ecosistema de tecnología, espacios de coworking, cafés y conferencias en Santo Domingo. Cada sticker colocado en este equipo es una vitrina en movimiento con exposición real ante fundadores, líderes de opinión y potenciales clientes.
+                    Esta MacBook Pro me acompaña a diario a reuniones de negocios, eventos del ecosistema de tecnología, espacios de coworking, cafés y conferencias en Santo Domingo. Cada sticker colocado en este equipo es una vitrina en movimiento con exposición real ante fundadores, líderes de opinión y potenciales clientes.
                   </p>
                 </div>
               </div>
@@ -342,15 +363,30 @@ function Index() {
               © {new Date().getFullYear()} Tu Logo en mi Mac · Santo Domingo, República Dominicana
             </p>
             <div className="flex shrink-0 items-center gap-4 text-muted-foreground">
-              <a href="#top" aria-label="Twitter" className="hover:text-foreground transition-colors"><Twitter className="h-4 w-4" /></a>
-              <a href="#top" aria-label="Instagram" className="hover:text-foreground transition-colors"><Instagram className="h-4 w-4" /></a>
-              <a href="#top" aria-label="GitHub" className="hover:text-foreground transition-colors"><Github className="h-4 w-4" /></a>
+              <a
+                href="https://www.instagram.com/robinsonnsanchez/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="hover:text-foreground transition-colors"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a
+                href="https://do.linkedin.com/in/robinsonsanchez"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="hover:text-foreground transition-colors"
+              >
+                <Linkedin className="h-4 w-4" />
+              </a>
             </div>
           </div>
 
           <div className="pt-4 border-t border-border/60">
             <p className="text-xs text-muted-foreground leading-relaxed max-w-3xl">
-              Tu Logo en mi Mac no está afiliado, respaldado ni patrocinado por Apple Inc. MacBook Air M5 y Mac son marcas comerciales registradas de Apple Inc.
+              Tu Logo en mi Mac no está afiliado, respaldado ni patrocinado por Apple Inc. MacBook Pro y Mac son marcas comerciales registradas de Apple Inc.
             </p>
           </div>
         </div>
