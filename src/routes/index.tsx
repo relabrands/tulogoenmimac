@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Apple, ArrowRight, Github, Instagram, Laptop, MousePointerClick, Shield, Sparkles, Twitter, Upload } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  Apple,
+  ArrowRight,
+  Briefcase,
+  ExternalLink,
+  Github,
+  Instagram,
+  Laptop,
+  MousePointerClick,
+  Sparkles,
+  Twitter,
+  Upload,
+  UserCheck,
+} from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { MacSurface } from "@/components/mac/MacSurface";
@@ -75,6 +88,7 @@ function Index() {
             <a href="#surface" className="hover:text-foreground transition-colors">La MacBook</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Precios</a>
             <a href="#how" className="hover:text-foreground transition-colors">¿Cómo funciona?</a>
+            <a href="#about" className="hover:text-foreground transition-colors">Sobre mí</a>
           </nav>
           <div className="flex items-center gap-3">
             <Button size="sm" asChild>
@@ -249,23 +263,84 @@ function Index() {
             </Button>
           </div>
         </section>
+        {/* Sobre mí */}
+        <section id="about" className="border-t border-border py-24">
+          <div className="mx-auto max-w-5xl px-5">
+            <div className="grid gap-10 lg:grid-cols-[280px_1fr] items-start">
+              {/* Tarjeta de Perfil */}
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm text-center lg:text-left">
+                <div className="mx-auto lg:mx-0 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary border border-border text-foreground font-mono text-xl font-bold mb-4 shadow-inner">
+                  RS
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Robinson Sánchez Sena</h3>
+                <p className="text-sm text-primary font-medium mt-1">Venture Builder & Estratega</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Santo Domingo, República Dominicana</p>
+
+                <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-1.5 justify-center lg:justify-start">
+                  <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                    Fintech
+                  </span>
+                  <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                    Healthtech
+                  </span>
+                  <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                    Marketing Ops
+                  </span>
+                </div>
+              </div>
+
+              {/* Biografía y propósito */}
+              <div className="space-y-6">
+                <div>
+                  <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                    Detrás de la MacBook
+                  </span>
+                  <h2 className="text-3xl font-bold tracking-tight mt-1 sm:text-4xl">
+                    Sobre mí
+                  </h2>
+                </div>
+
+                <div className="space-y-4 text-base text-muted-foreground leading-relaxed">
+                  <p>
+                    Robinson Sánchez Sena es un emprendedor dominicano, constructor de empresas (<span className="text-foreground font-medium">venture builder</span>) y estratega de negocios enfocado en el desarrollo de startups tecnológicas y ecosistemas de marketing en la República Dominicana.
+                  </p>
+                  <p>
+                    Su trabajo destaca principalmente en los sectores de tecnología financiera (<span className="text-foreground font-medium">fintech</span>), salud digital (<span className="text-foreground font-medium">healthtech</span>) y marketing operativo.
+                  </p>
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-foreground text-sm font-medium flex items-center gap-3">
+                    <Sparkles className="h-5 w-5 text-primary shrink-0" />
+                    <span>
+                      Actualmente impulsando <strong>Nomi</strong>, la primera plataforma de bienestar financiero de la República Dominicana.
+                    </span>
+                  </div>
+                  <p className="text-sm">
+                    Esta MacBook Pro me acompaña a diario a reuniones de negocios, eventos del ecosistema de tecnología, espacios de coworking, cafés y conferencias en Santo Domingo. Cada sticker colocado en este equipo es una vitrina en movimiento con exposición real ante fundadores, líderes de opinión y potenciales clientes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-10">
-        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 sm:flex sm:justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-            <span>© {new Date().getFullYear()} Tu Logo en mi Mac · Santo Domingo, RD</span>
-            <span className="hidden sm:inline">·</span>
-            <Link to="/admin" className="inline-flex items-center gap-1 hover:text-foreground transition-colors font-medium">
-              <Shield className="h-3.5 w-3.5" />
-              Panel de Administración
-            </Link>
+      <footer className="border-t border-border py-12">
+        <div className="mx-auto max-w-6xl px-5 space-y-6">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
+            <p className="text-sm font-medium text-foreground">
+              © {new Date().getFullYear()} Tu Logo en mi Mac · Santo Domingo, República Dominicana
+            </p>
+            <div className="flex shrink-0 items-center gap-4 text-muted-foreground">
+              <a href="#top" aria-label="Twitter" className="hover:text-foreground transition-colors"><Twitter className="h-4 w-4" /></a>
+              <a href="#top" aria-label="Instagram" className="hover:text-foreground transition-colors"><Instagram className="h-4 w-4" /></a>
+              <a href="#top" aria-label="GitHub" className="hover:text-foreground transition-colors"><Github className="h-4 w-4" /></a>
+            </div>
           </div>
-          <div className="flex shrink-0 items-center gap-4 text-muted-foreground">
-            <a href="#top" aria-label="Twitter" className="hover:text-foreground transition-colors"><Twitter className="h-4 w-4" /></a>
-            <a href="#top" aria-label="Instagram" className="hover:text-foreground transition-colors"><Instagram className="h-4 w-4" /></a>
-            <a href="#top" aria-label="GitHub" className="hover:text-foreground transition-colors"><Github className="h-4 w-4" /></a>
+
+          <div className="pt-4 border-t border-border/60">
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-3xl">
+              Brand My Mac / Tu Logo en mi Mac no está afiliado, respaldado ni patrocinado por Apple Inc. MacBook Pro y Mac son marcas comerciales registradas de Apple Inc.
+            </p>
           </div>
         </div>
       </footer>
