@@ -4,11 +4,14 @@ import type { Spot, SpotView } from "@/lib/spots";
 import { currency } from "@/lib/spots";
 import { cn } from "@/lib/utils";
 import { BrandTile } from "./BrandTile";
+import lidImg from "@/assets/mac-lid.png";
+import insideImg from "@/assets/mac-inside.png";
 import lidAsset from "@/assets/mac-lid.png.asset.json";
 import insideAsset from "@/assets/mac-inside.png.asset.json";
 
 function Face({
   image,
+  fallbackImage,
   alt,
   spots,
   onSelect,
@@ -16,18 +19,30 @@ function Face({
   className,
 }: {
   image: string;
+  fallbackImage?: string;
   alt: string;
   spots: Spot[];
   onSelect: (spot: Spot) => void;
   interactive: boolean;
   className?: string;
 }) {
+  const [currentSrc, setCurrentSrc] = useState(image);
+
+  useEffect(() => {
+    setCurrentSrc(image);
+  }, [image]);
+
   return (
     <div className={cn("absolute inset-0 [backface-visibility:hidden]", className)}>
       <img
-        src={image}
+        src={currentSrc}
         alt={alt}
         draggable={false}
+        onError={() => {
+          if (fallbackImage && currentSrc !== fallbackImage) {
+            setCurrentSrc(fallbackImage);
+          }
+        }}
         className="h-full w-full select-none rounded-2xl object-contain sm:rounded-3xl"
       />
       {spots.map((spot) => {
@@ -150,14 +165,16 @@ export function MacSurface({
           style={{ transform: `rotateY(${angle}deg)` }}
         >
           <Face
-            image={lidAsset.url}
+            image={lidImg || lidAsset.url}
+            fallbackImage={(lidAsset as { remote_url?: string }).remote_url || "/assets/mac-lid.png"}
             alt="MacBook lid with sponsored sticker spots"
             spots={spots.filter((s) => s.view === "lid")}
             onSelect={onSelect}
             interactive={facing === "lid" && !dragging}
           />
           <Face
-            image={insideAsset.url}
+            image={insideImg || insideAsset.url}
+            fallbackImage={(insideAsset as { remote_url?: string }).remote_url || "/assets/mac-inside.png"}
             alt="MacBook keyboard and palm rest with sponsored sticker spots"
             spots={spots.filter((s) => s.view === "inside")}
             onSelect={onSelect}
