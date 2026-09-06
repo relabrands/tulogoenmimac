@@ -57,8 +57,8 @@ function Face({
               disabled={taken || !interactive}
               aria-label={
                 taken
-                  ? `${spot.name} — taken by ${spot.brand?.name}`
-                  : `Claim ${spot.name} from ${currency(spot.price)}`
+                  ? `${spot.name} — reservado por ${spot.brand?.name}`
+                  : `Reservar ${spot.name} desde ${currency(spot.price)}`
               }
               style={{
                 left: `${spot.pos.x}%`,
@@ -169,7 +169,7 @@ export function MacSurface({
           <Face
             image={lidImg || lidAsset.url}
             fallbackImage={(lidAsset as { remote_url?: string }).remote_url || "/assets/mac-lid.png"}
-            alt="MacBook lid with sponsored sticker spots"
+            alt="Tapa de MacBook con espacios para stickers"
             spots={spots.filter((s) => s.view === "lid")}
             onSelect={onSelect}
             interactive={facing === "lid" && !dragging}
@@ -177,7 +177,7 @@ export function MacSurface({
           <Face
             image={insideImg || insideAsset.url}
             fallbackImage={(insideAsset as { remote_url?: string }).remote_url || "/assets/mac-inside.png"}
-            alt="MacBook keyboard and palm rest with sponsored sticker spots"
+            alt="Interior del MacBook con teclado y reposamuñecas"
             spots={spots.filter((s) => s.view === "inside")}
             onSelect={onSelect}
             interactive={facing === "inside" && !dragging}
@@ -187,7 +187,7 @@ export function MacSurface({
       </div>
       <p className="mt-4 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
         <RotateCcw className="h-4 w-4" />
-        Drag the MacBook to spin it — tap any dashed spot to claim it.
+        Arrastra el MacBook para girarlo — haz clic en cualquier espacio punteado para reservarlo.
       </p>
     </div>
   );

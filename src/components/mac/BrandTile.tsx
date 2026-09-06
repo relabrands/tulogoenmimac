@@ -2,6 +2,19 @@ import type { Spot } from "@/lib/spots";
 import { cn } from "@/lib/utils";
 
 export function BrandTile({ brand, compact }: { brand: NonNullable<Spot["brand"]>; compact?: boolean }) {
+  if (brand.logoUrl) {
+    return (
+      <div className="relative flex h-full w-full items-center justify-center p-0.5 sm:p-1">
+        <img
+          src={brand.logoUrl}
+          alt={brand.name}
+          className="max-h-full max-w-full object-contain filter drop-shadow-sm"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -9,6 +22,7 @@ export function BrandTile({ brand, compact }: { brand: NonNullable<Spot["brand"]
         brand.tone === "dark" && "bg-ink text-ink-foreground",
         brand.tone === "light" && "bg-card text-foreground border border-border",
         brand.tone === "outline" && "bg-secondary text-secondary-foreground",
+        !brand.tone && "bg-ink text-ink-foreground",
       )}
     >
       <span
