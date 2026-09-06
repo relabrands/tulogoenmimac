@@ -66,7 +66,7 @@ function Face({
               height: `${spot.pos.h}%`,
             }}
             className={cn(
-              "group absolute flex flex-col items-center justify-center overflow-hidden rounded-lg p-1 transition",
+              "group absolute flex flex-col items-center justify-center overflow-hidden rounded-md p-0.5 sm:rounded-lg sm:p-1 transition",
               taken
                 ? "cursor-default bg-card/90 ring-1 ring-border backdrop-blur-sm"
                 : "cursor-pointer border-2 border-dashed border-card/60 bg-background/75 backdrop-blur-sm hover:border-card hover:bg-background",
@@ -77,17 +77,17 @@ function Face({
                 <div className="h-[66%] w-full">
                   <BrandTile brand={spot.brand!} compact />
                 </div>
-                <span className="mt-0.5 font-mono text-[9px] text-muted-foreground sm:text-[10px]">
+                <span className="mt-0.5 font-mono text-[8px] text-muted-foreground sm:text-[10px]">
                   {currency(spot.price)}
                 </span>
               </>
             ) : (
               <>
-                <Plus className="h-3.5 w-3.5 text-muted-foreground transition group-hover:text-foreground sm:h-4 sm:w-4" />
-                <span className="mt-0.5 hidden text-[10px] font-medium leading-tight text-muted-foreground sm:block">
+                <Plus className="h-3 w-3 text-muted-foreground transition group-hover:text-foreground sm:h-3.5 sm:w-3.5" />
+                <span className="mt-0.5 hidden text-[9px] font-medium leading-tight text-muted-foreground sm:block">
                   {spot.size} · {spot.dims}
                 </span>
-                <span className="font-mono text-[9px] leading-tight text-foreground sm:text-[11px]">
+                <span className="font-mono text-[8px] leading-tight text-foreground sm:text-[10px]">
                   {currency(spot.price)}
                 </span>
               </>
