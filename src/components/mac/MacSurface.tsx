@@ -51,7 +51,10 @@ function Face({
               setCurrentSrc(fallbackImage);
             }
           }}
-          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl shadow-sm"
+          className="block h-auto w-full select-none"
+          style={{
+            filter: "drop-shadow(0 22px 30px rgba(0, 0, 0, 0.35)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.18))",
+          }}
         />
         {spots.map((spot) => {
           const taken = Boolean(spot.brand);
