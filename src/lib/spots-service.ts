@@ -49,6 +49,26 @@ const SPOTS_CACHE_KEY = "brandmymac_spots_v2";
 const CLAIMS_CACHE_KEY = "brandmymac_claims_v2";
 const PROFILE_CACHE_KEY = "brandmymac_profile_v1";
 
+/**
+ * Garantiza que las propiedades estructurales críticas (nombre, vista, dimensiones, tamaño, posición 3D)
+ * nunca se pierdan ni se vuelvan undefined, combinando sobre la plantilla estática SPOTS.
+ */
+export function mergeSpotWithBase(base: Spot, override?: any): Spot {
+  if (!override) return base;
+  return {
+    ...base,
+    ...override,
+    id: base.id,
+    name: typeof override.name === "string" && override.name.trim() ? override.name : base.name,
+    view: override.view === "lid" || override.view === "inside" ? override.view : base.view,
+    size: override.size || base.size,
+    dims: typeof override.dims === "string" && override.dims.trim() ? override.dims : base.dims,
+    pos: override.pos && typeof override.pos.x === "number" ? override.pos : base.pos,
+    price: typeof override.price === "number" && !isNaN(override.price) ? override.price : base.price,
+    brand: override.brand !== undefined ? override.brand : base.brand,
+  };
+}
+
 // Local storage helpers for robust fallback and immediate offline reliability
 function getLocalSpots(): Spot[] {
   if (typeof window === "undefined") return SPOTS;
@@ -56,7 +76,12 @@ function getLocalSpots(): Spot[] {
     const data = localStorage.getItem(SPOTS_CACHE_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return SPOTS.map((base) => {
+          const stored = parsed.find((p: any) => Number(p.id) === base.id);
+          return mergeSpotWithBase(base, stored);
+        });
+      }
     }
   } catch (e) {
     console.error("Error reading local spots:", e);
@@ -115,27 +140,40 @@ function sanitizeForFirestore<T>(data: T): T {
  * con sincronización automática y fallback a almacenamiento local.
  */
 export function subscribeToSpots(onUpdate: (spots: Spot[]) => void) {
-  // Enviar estado inicial inmediato
+  // 1. Enviar estado inicial inmediato completamente reparado y garantizado
   const current = getLocalSpots();
+  saveLocalSpots(current);
   onUpdate(current);
 
+  // 2. Escuchar cambios instantáneos locales entre pestañas o acciones
+  const handleLocalChange = () => {
+    const fresh = getLocalSpots();
+    onUpdate(fresh);
+  };
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", handleLocalChange);
+    window.addEventListener("spots-updated", handleLocalChange);
+  }
+
+  // 3. Conexión en tiempo real con Firestore
+  let unsub: (() => void) | undefined;
   try {
     const spotsCol = collection(db, "spots");
-    const unsub = onSnapshot(
+    unsub = onSnapshot(
       spotsCol,
       (snapshot) => {
         if (!snapshot.empty) {
-          const map = new Map<number, Spot>();
+          const map = new Map<number, any>();
           snapshot.forEach((docSnap) => {
-            const data = docSnap.data() as Spot;
-            map.set(Number(docSnap.id), data);
+            map.set(Number(docSnap.id), docSnap.data());
           });
-          // Asegurar que todos los 18 espacios existen en el orden correcto
           const currentLocal = getLocalSpots();
           const merged = SPOTS.map((base) => {
             const remote = map.get(base.id);
             const local = currentLocal.find((l) => l.id === base.id);
-            return remote || local || base;
+            const withLocal = mergeSpotWithBase(base, local);
+            return mergeSpotWithBase(withLocal, remote);
           });
           saveLocalSpots(merged);
           onUpdate(merged);
@@ -144,16 +182,21 @@ export function subscribeToSpots(onUpdate: (spots: Spot[]) => void) {
           initializeFirestoreSpots();
         }
       },
-      (error) => {
-        console.warn("Firestore spots listener warning (using local persistence):", error.message);
+      () => {
         onUpdate(getLocalSpots());
       },
     );
-    return unsub;
-  } catch (err) {
-    console.warn("Could not attach Firestore listener:", err);
-    return () => {};
+  } catch {
+    // Modo local seguro
   }
+
+  return () => {
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", handleLocalChange);
+      window.removeEventListener("spots-updated", handleLocalChange);
+    }
+    if (typeof unsub === "function") unsub();
+  };
 }
 
 /**
@@ -176,23 +219,32 @@ export async function initializeFirestoreSpots() {
  * Actualiza la información de un espacio (precio, marca, logo, enlace).
  */
 export async function updateSpot(spotId: number, data: Partial<Spot>) {
-  // 1. Actualizar inmediatamente en local para UX instantánea
+  const base = SPOTS.find((s) => s.id === spotId);
+  if (!base) return;
+
+  // 1. Actualizar inmediatamente en local con protección estructural completa
   const current = getLocalSpots();
-  const updated = current.map((s) => (s.id === spotId ? { ...s, ...data } : s));
+  const updated = current.map((s) => (s.id === spotId ? mergeSpotWithBase(base, { ...s, ...data }) : s));
   saveLocalSpots(updated);
 
-  // 2. Sincronizar en Firestore con sanitización y timeout de 3.5s
+  // Notificar al instante a la pestaña actual y resto de pestañas (0 ms de espera)
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("spots-updated", { detail: updated }));
+  }
+
+  // 2. Sincronizar en Firestore con datos completos y sanitizados en segundo plano
   try {
-    const cleanData = sanitizeForFirestore({ id: spotId, ...data });
+    const fullSpot = updated.find((s) => s.id === spotId);
+    const cleanData = sanitizeForFirestore(fullSpot);
     const ref = doc(db, "spots", String(spotId));
     await Promise.race([
       setDoc(ref, cleanData, { merge: true }),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Firestore sync timeout")), 3500),
+        setTimeout(() => reject(new Error("Firestore sync timeout")), 1500),
       ),
     ]);
-  } catch (err) {
-    console.warn("Firestore updateSpot warning (guardado localmente):", err);
+  } catch {
+    // Almacenado localmente con éxito e instantaneidad
   }
 }
 
