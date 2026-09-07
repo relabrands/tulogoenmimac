@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, RotateCcw } from "lucide-react";
+import { Plus, RotateCcw, Layers, Sparkles } from "lucide-react";
 import type { Spot, SpotView } from "@/lib/spots";
 import { currency } from "@/lib/spots";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ function Face({
   spots,
   onSelect,
   interactive,
+  finalLook,
   className,
 }: {
   image: string;
@@ -24,6 +25,7 @@ function Face({
   spots: Spot[];
   onSelect: (spot: Spot) => void;
   interactive: boolean;
+  finalLook?: boolean;
   className?: string;
 }) {
   const [currentSrc, setCurrentSrc] = useState(image);
@@ -44,7 +46,7 @@ function Face({
               setCurrentSrc(fallbackImage);
             }
           }}
-          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl"
+          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl shadow-sm"
         />
         {spots.map((spot) => {
           const taken = Boolean(spot.brand);
@@ -88,12 +90,17 @@ function Face({
                 height: `${spot.pos.h}%`,
               }}
               className={cn(
-                "group absolute flex flex-col items-center justify-center overflow-hidden transition duration-200",
+                "group absolute flex flex-col items-center justify-center overflow-hidden transition-all duration-300",
                 taken
                   ? isTransparent
                     ? "cursor-pointer bg-transparent ring-0 border-0 shadow-none p-0 hover:scale-105"
-                    : "cursor-default bg-card/90 ring-1 ring-border backdrop-blur-sm rounded-md p-0.5 sm:rounded-lg sm:p-1 shadow-sm"
-                  : "cursor-pointer border-2 border-dashed border-card/60 bg-background/75 backdrop-blur-sm hover:border-card hover:bg-background rounded-md p-0.5 sm:rounded-lg sm:p-1 shadow-sm",
+                    : "cursor-default bg-card/90 ring-1 ring-border backdrop-blur-sm rounded-xl p-0.5 sm:p-1 shadow-sm"
+                  : cn(
+                      "cursor-pointer rounded-xl transition-all duration-300 p-0.5 sm:p-1",
+                      finalLook
+                        ? "opacity-0 pointer-events-none scale-95"
+                        : "border border-dashed border-white/35 bg-white/[0.04] backdrop-blur-[1.5px] hover:border-white/80 hover:bg-white/[0.12] hover:scale-[1.02] shadow-sm",
+                    ),
               )}
             >
               {taken ? (
@@ -113,11 +120,11 @@ function Face({
                 )
               ) : (
                 <>
-                  <Plus className="h-3 w-3 text-muted-foreground transition group-hover:text-foreground sm:h-3.5 sm:w-3.5" />
-                  <span className="mt-0.5 hidden text-[9px] font-medium leading-tight text-muted-foreground sm:block">
+                  <Plus className="h-3 w-3 text-white/70 transition group-hover:text-white group-hover:scale-110 sm:h-3.5 sm:w-3.5" />
+                  <span className="mt-0.5 hidden text-[9px] font-medium leading-tight text-white/70 sm:block">
                     {spot.size} · {spot.dims}
                   </span>
-                  <span className="font-mono text-[8px] leading-tight text-foreground sm:text-[10px]">
+                  <span className="font-mono text-[8px] font-semibold leading-tight text-white/95 sm:text-[10px] group-hover:text-white">
                     {currency(spot.price)}
                   </span>
                 </>
@@ -143,6 +150,7 @@ export function MacSurface({
 }) {
   const [angle, setAngle] = useState(view === "lid" ? 0 : 180);
   const [dragging, setDragging] = useState(false);
+  const [finalLook, setFinalLook] = useState(false);
   const drag = useRef<{ x: number; start: number } | null>(null);
 
   useEffect(() => {
@@ -193,7 +201,10 @@ export function MacSurface({
             "relative aspect-[1.5] w-full [transform-style:preserve-3d]",
             dragging ? "cursor-grabbing" : "cursor-grab transition-transform duration-700 ease-out",
           )}
-          style={{ transform: `rotateY(${angle}deg)` }}
+          style={{
+            transform: `rotateY(${angle}deg)`,
+            filter: "drop-shadow(0 25px 35px rgba(0,0,0,0.38)) drop-shadow(0 8px 12px rgba(0,0,0,0.22))",
+          }}
         >
           <Face
             image={lidImg || lidAsset.url}
@@ -202,6 +213,7 @@ export function MacSurface({
             spots={spots.filter((s) => s.view === "lid")}
             onSelect={onSelect}
             interactive={facing === "lid" && !dragging}
+            finalLook={finalLook}
           />
           <Face
             image={insideImg || insideAsset.url}
@@ -210,13 +222,47 @@ export function MacSurface({
             spots={spots.filter((s) => s.view === "inside")}
             onSelect={onSelect}
             interactive={facing === "inside" && !dragging}
+            finalLook={finalLook}
             className="[transform:rotateY(180deg)]"
           />
         </div>
       </div>
-      <p className="mt-4 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
-        <RotateCcw className="h-4 w-4" />
-        Arrastra el MacBook para girarlo — haz clic en cualquier espacio punteado para reservarlo.
+
+      {/* Selector de modo: Espacios vs Vista Real */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <div className="inline-flex items-center rounded-full border border-border/80 bg-card/80 p-1 shadow-sm backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => setFinalLook(false)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all",
+              !finalLook
+                ? "bg-foreground text-background shadow-sm font-semibold"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            Espacios y Precios
+          </button>
+          <button
+            type="button"
+            onClick={() => setFinalLook(true)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all",
+              finalLook
+                ? "bg-foreground text-background shadow-sm font-semibold"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            Vista Final (Real)
+          </button>
+        </div>
+      </div>
+
+      <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+        <RotateCcw className="h-3.5 w-3.5" />
+        Arrastra el MacBook para girarlo — haz clic en cualquier espacio para reservarlo.
       </p>
     </div>
   );

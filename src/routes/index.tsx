@@ -141,8 +141,11 @@ function Index() {
         </section>
 
         {/* Surface */}
-        <section id="surface" className="mx-auto max-w-4xl px-5 pb-20">
-          <div className="mb-6 flex justify-center">
+        <section id="surface" className="relative mx-auto max-w-4xl px-5 pb-20">
+          <div className="pointer-events-none absolute inset-0 -top-8 flex items-center justify-center overflow-hidden">
+            <div className="h-[420px] w-[640px] rounded-full bg-gradient-to-tr from-primary/10 via-slate-400/5 to-transparent blur-3xl opacity-70" />
+          </div>
+          <div className="relative z-10 mb-6 flex justify-center">
             <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
               {(["lid", "inside"] as SpotView[]).map((v) => (
                 <button
