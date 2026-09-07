@@ -35,8 +35,8 @@ function Face({
   }, [image]);
 
   return (
-    <div className={cn("absolute inset-0 flex items-center justify-center [backface-visibility:hidden]", className)}>
-      <div className="relative w-full">
+    <div className={cn("absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [-webkit-backface-visibility:hidden]", className)}>
+      <div className="relative w-full [backface-visibility:hidden] [-webkit-backface-visibility:hidden]">
         <img
           src={currentSrc}
           alt={alt}
@@ -46,7 +46,7 @@ function Face({
               setCurrentSrc(fallbackImage);
             }
           }}
-          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl shadow-sm"
+          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl shadow-sm [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
         />
         {spots.map((spot) => {
           const taken = Boolean(spot.brand);
@@ -90,7 +90,7 @@ function Face({
                 height: `${spot.pos.h}%`,
               }}
               className={cn(
-                "group absolute flex flex-col items-center justify-center overflow-hidden transition-all duration-300",
+                "group absolute flex flex-col items-center justify-center overflow-hidden transition-all duration-300 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]",
                 taken
                   ? isTransparent
                     ? "cursor-pointer bg-transparent ring-0 border-0 shadow-none p-0 hover:scale-105"
@@ -214,6 +214,7 @@ export function MacSurface({
             onSelect={onSelect}
             interactive={facing === "lid" && !dragging}
             finalLook={finalLook}
+            className={cn(facing !== "lid" && !dragging ? "pointer-events-none invisible" : "visible")}
           />
           <Face
             image={insideImg || insideAsset.url}
@@ -223,7 +224,10 @@ export function MacSurface({
             onSelect={onSelect}
             interactive={facing === "inside" && !dragging}
             finalLook={finalLook}
-            className="[transform:rotateY(180deg)]"
+            className={cn(
+              "[transform:rotateY(180deg)]",
+              facing !== "inside" && !dragging ? "pointer-events-none invisible" : "visible",
+            )}
           />
         </div>
       </div>
