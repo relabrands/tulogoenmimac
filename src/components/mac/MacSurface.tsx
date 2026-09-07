@@ -18,6 +18,7 @@ function Face({
   interactive,
   finalLook,
   className,
+  style,
 }: {
   image: string;
   fallbackImage?: string;
@@ -27,6 +28,7 @@ function Face({
   interactive: boolean;
   finalLook?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const [currentSrc, setCurrentSrc] = useState(image);
 
@@ -35,8 +37,11 @@ function Face({
   }, [image]);
 
   return (
-    <div className={cn("absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [-webkit-backface-visibility:hidden]", className)}>
-      <div className="relative w-full [backface-visibility:hidden] [-webkit-backface-visibility:hidden]">
+    <div
+      className={cn("absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [-webkit-backface-visibility:hidden]", className)}
+      style={style}
+    >
+      <div className="relative w-full">
         <img
           src={currentSrc}
           alt={alt}
@@ -46,7 +51,7 @@ function Face({
               setCurrentSrc(fallbackImage);
             }
           }}
-          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl shadow-sm [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
+          className="block h-auto w-full select-none rounded-2xl sm:rounded-3xl shadow-sm"
         />
         {spots.map((spot) => {
           const taken = Boolean(spot.brand);
@@ -90,7 +95,7 @@ function Face({
                 height: `${spot.pos.h}%`,
               }}
               className={cn(
-                "group absolute flex flex-col items-center justify-center overflow-hidden transition-all duration-300 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]",
+                "group absolute flex flex-col items-center justify-center overflow-hidden transition-all duration-300",
                 taken
                   ? isTransparent
                     ? "cursor-pointer bg-transparent ring-0 border-0 shadow-none p-0 hover:scale-105"
@@ -203,7 +208,6 @@ export function MacSurface({
           )}
           style={{
             transform: `rotateY(${angle}deg)`,
-            filter: "drop-shadow(0 25px 35px rgba(0,0,0,0.38)) drop-shadow(0 8px 12px rgba(0,0,0,0.22))",
           }}
         >
           <Face
@@ -214,7 +218,7 @@ export function MacSurface({
             onSelect={onSelect}
             interactive={facing === "lid" && !dragging}
             finalLook={finalLook}
-            className={cn(facing !== "lid" && !dragging ? "pointer-events-none invisible" : "visible")}
+            className={cn(facing === "inside" && !dragging ? "pointer-events-none opacity-0" : "opacity-100 transition-opacity duration-300")}
           />
           <Face
             image={insideImg || insideAsset.url}
@@ -226,7 +230,7 @@ export function MacSurface({
             finalLook={finalLook}
             className={cn(
               "[transform:rotateY(180deg)]",
-              facing !== "inside" && !dragging ? "pointer-events-none invisible" : "visible",
+              facing === "lid" && !dragging ? "pointer-events-none opacity-0" : "opacity-100 transition-opacity duration-300",
             )}
           />
         </div>
