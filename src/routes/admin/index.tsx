@@ -96,7 +96,7 @@ function AdminDashboard() {
   const [editLogoUrl, setEditLogoUrl] = useState("");
   const [editUrl, setEditUrl] = useState("");
   const [editTagline, setEditTagline] = useState("");
-  const [editTone, setEditTone] = useState<"dark" | "light" | "outline">("dark");
+  const [editTone, setEditTone] = useState<"dark" | "light" | "outline" | "transparent">("transparent");
   const [savingSpot, setSavingSpot] = useState(false);
 
   // Diálogo de reinicio de base de datos
@@ -144,7 +144,7 @@ function AdminDashboard() {
     setEditLogoUrl(spot.brand?.logoUrl ?? "");
     setEditUrl(spot.brand?.url ?? "");
     setEditTagline(spot.brand?.tagline ?? "");
-    setEditTone(spot.brand?.tone ?? "dark");
+    setEditTone(spot.brand?.tone ?? "transparent");
   };
 
   // Guardar cambios en el espacio
@@ -154,9 +154,10 @@ function AdminDashboard() {
 
     setSavingSpot(true);
     try {
-      const brandData: SpotBrand | null = editBrandName.trim()
+      const hasBrand = Boolean(editBrandName.trim() || editLogoUrl.trim());
+      const brandData: SpotBrand | null = hasBrand
         ? {
-            name: editBrandName.trim(),
+            name: editBrandName.trim() || (editLogoUrl.trim() ? "Logo Patrocinador" : "Marca"),
             url: editUrl.trim() || undefined,
             logoUrl: editLogoUrl.trim() || undefined,
             tagline: editTagline.trim() || undefined,
@@ -1004,11 +1005,12 @@ function AdminDashboard() {
                     <select
                       id="edit-tone"
                       value={editTone}
-                      onChange={(e) => setEditTone(e.target.value as "dark" | "light" | "outline")}
+                      onChange={(e) => setEditTone(e.target.value as "dark" | "light" | "outline" | "transparent")}
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
                     >
-                      <option value="dark">Fondo oscuro (Dark)</option>
-                      <option value="light">Fondo claro (Light)</option>
+                      <option value="transparent">✨ Solo el logo (transparente, sin fondo blanco)</option>
+                      <option value="dark">Fondo oscuro (Dark sticker)</option>
+                      <option value="light">Fondo claro (Light sticker)</option>
                       <option value="outline">Borde sutil (Outline)</option>
                     </select>
                   </div>

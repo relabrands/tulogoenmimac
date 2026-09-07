@@ -3,7 +3,7 @@ export type SpotSize = "S" | "M" | "L";
 
 export type SpotBrand = {
   name: string;
-  tone?: "dark" | "light" | "outline" | undefined;
+  tone?: "dark" | "light" | "outline" | "transparent" | undefined;
   tagline?: string | undefined;
   url?: string | undefined;
   logoUrl?: string | undefined;

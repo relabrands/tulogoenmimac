@@ -48,13 +48,34 @@ function Face({
         />
         {spots.map((spot) => {
           const taken = Boolean(spot.brand);
+          const isTransparent =
+            taken &&
+            (spot.brand?.tone === "transparent" ||
+              (!spot.brand?.tone && Boolean(spot.brand?.logoUrl)));
+
+          const handleClick = () => {
+            if (!taken) {
+              onSelect(spot);
+            } else if (spot.brand?.url) {
+              const targetUrl = spot.brand.url.startsWith("http")
+                ? spot.brand.url
+                : `https://${spot.brand.url}`;
+              window.open(targetUrl, "_blank", "noopener,noreferrer");
+            }
+          };
+
           return (
             <button
               key={spot.id}
               type="button"
               tabIndex={interactive ? 0 : -1}
-              onClick={() => !taken && onSelect(spot)}
-              disabled={taken || !interactive}
+              onClick={handleClick}
+              disabled={!interactive}
+              title={
+                taken
+                  ? `${spot.name} — ${spot.brand?.name}${spot.brand?.url ? ` (${spot.brand.url})` : ""}`
+                  : `Reservar ${spot.name} desde ${currency(spot.price)}`
+              }
               aria-label={
                 taken
                   ? `${spot.name} — reservado por ${spot.brand?.name}`
@@ -67,21 +88,29 @@ function Face({
                 height: `${spot.pos.h}%`,
               }}
               className={cn(
-                "group absolute flex flex-col items-center justify-center overflow-hidden rounded-md p-0.5 sm:rounded-lg sm:p-1 transition shadow-sm",
+                "group absolute flex flex-col items-center justify-center overflow-hidden transition duration-200",
                 taken
-                  ? "cursor-default bg-card/90 ring-1 ring-border backdrop-blur-sm"
-                  : "cursor-pointer border-2 border-dashed border-card/60 bg-background/75 backdrop-blur-sm hover:border-card hover:bg-background",
+                  ? isTransparent
+                    ? "cursor-pointer bg-transparent ring-0 border-0 shadow-none p-0 hover:scale-105"
+                    : "cursor-default bg-card/90 ring-1 ring-border backdrop-blur-sm rounded-md p-0.5 sm:rounded-lg sm:p-1 shadow-sm"
+                  : "cursor-pointer border-2 border-dashed border-card/60 bg-background/75 backdrop-blur-sm hover:border-card hover:bg-background rounded-md p-0.5 sm:rounded-lg sm:p-1 shadow-sm",
               )}
             >
               {taken ? (
-                <>
-                  <div className="h-[66%] w-full">
+                isTransparent ? (
+                  <div className="h-full w-full flex items-center justify-center p-0.5">
                     <BrandTile brand={spot.brand!} compact />
                   </div>
-                  <span className="mt-0.5 font-mono text-[8px] text-muted-foreground sm:text-[10px]">
-                    {currency(spot.price)}
-                  </span>
-                </>
+                ) : (
+                  <>
+                    <div className="h-[66%] w-full">
+                      <BrandTile brand={spot.brand!} compact />
+                    </div>
+                    <span className="mt-0.5 font-mono text-[8px] text-muted-foreground sm:text-[10px]">
+                      {currency(spot.price)}
+                    </span>
+                  </>
+                )
               ) : (
                 <>
                   <Plus className="h-3 w-3 text-muted-foreground transition group-hover:text-foreground sm:h-3.5 sm:w-3.5" />

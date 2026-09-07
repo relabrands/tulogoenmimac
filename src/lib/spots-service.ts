@@ -93,6 +93,23 @@ function saveLocalClaims(claims: Claim[]) {
   }
 }
 
+function sanitizeForFirestore<T>(data: T): T {
+  if (data === null || data === undefined) return data;
+  if (Array.isArray(data)) {
+    return data.map(sanitizeForFirestore) as unknown as T;
+  }
+  if (typeof data === "object") {
+    const clean: Record<string, any> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        clean[key] = sanitizeForFirestore(value);
+      }
+    }
+    return clean as T;
+  }
+  return data;
+}
+
 /**
  * Escucha cambios en tiempo real en los 18 espacios desde Firestore,
  * con sincronización automática y fallback a almacenamiento local.
@@ -114,7 +131,12 @@ export function subscribeToSpots(onUpdate: (spots: Spot[]) => void) {
             map.set(Number(docSnap.id), data);
           });
           // Asegurar que todos los 18 espacios existen en el orden correcto
-          const merged = SPOTS.map((base) => map.get(base.id) || base);
+          const currentLocal = getLocalSpots();
+          const merged = SPOTS.map((base) => {
+            const remote = map.get(base.id);
+            const local = currentLocal.find((l) => l.id === base.id);
+            return remote || local || base;
+          });
           saveLocalSpots(merged);
           onUpdate(merged);
         } else {
@@ -139,12 +161,14 @@ export function subscribeToSpots(onUpdate: (spots: Spot[]) => void) {
  */
 export async function initializeFirestoreSpots() {
   try {
-    for (const spot of SPOTS) {
+    const local = getLocalSpots();
+    for (const spot of local) {
+      const clean = sanitizeForFirestore(spot);
       const ref = doc(db, "spots", String(spot.id));
-      await setDoc(ref, spot, { merge: true });
+      await setDoc(ref, clean, { merge: true });
     }
   } catch (err) {
-    console.warn("Notice: Firestore database initialization will complete once Firestore is enabled:", err);
+    console.warn("Notice: Firestore database initialization warning:", err);
   }
 }
 
@@ -152,17 +176,23 @@ export async function initializeFirestoreSpots() {
  * Actualiza la información de un espacio (precio, marca, logo, enlace).
  */
 export async function updateSpot(spotId: number, data: Partial<Spot>) {
-  // Actualizar inmediatamente en local para UX instantánea
+  // 1. Actualizar inmediatamente en local para UX instantánea
   const current = getLocalSpots();
   const updated = current.map((s) => (s.id === spotId ? { ...s, ...data } : s));
   saveLocalSpots(updated);
 
-  // Sincronizar en Firestore
+  // 2. Sincronizar en Firestore con sanitización y timeout de 3.5s
   try {
+    const cleanData = sanitizeForFirestore({ id: spotId, ...data });
     const ref = doc(db, "spots", String(spotId));
-    await setDoc(ref, { id: spotId, ...data }, { merge: true });
+    await Promise.race([
+      setDoc(ref, cleanData, { merge: true }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore sync timeout")), 3500),
+      ),
+    ]);
   } catch (err) {
-    console.warn("Firestore updateSpot sync:", err);
+    console.warn("Firestore updateSpot warning (guardado localmente):", err);
   }
 }
 
@@ -266,7 +296,7 @@ export async function updateClaimStatus(
     const brandData: SpotBrand = {
       name: claim.brandName,
       url: claim.url,
-      tone: "dark",
+      tone: "transparent",
     };
     await updateSpot(claim.spotId, { brand: brandData });
   }
@@ -365,8 +395,14 @@ export async function updateProfile(data: Partial<FounderProfile>) {
   saveLocalProfile(updated);
 
   try {
+    const clean = sanitizeForFirestore(updated);
     const profileRef = doc(db, "settings", "profile");
-    await setDoc(profileRef, updated, { merge: true });
+    await Promise.race([
+      setDoc(profileRef, clean, { merge: true }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore sync timeout")), 3500),
+      ),
+    ]);
   } catch (err) {
     console.warn("Firestore updateProfile sync:", err);
   }
