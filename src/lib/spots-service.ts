@@ -137,15 +137,14 @@ function sanitizeForFirestore<T>(data: T): T {
 
 /**
  * Escucha cambios en tiempo real en los 18 espacios desde Firestore,
- * con sincronización automática y fallback a almacenamiento local.
+ * con sincronización automática y persistencia de caché local.
  */
 export function subscribeToSpots(onUpdate: (spots: Spot[]) => void) {
-  // 1. Enviar estado inicial inmediato completamente reparado y garantizado
-  const current = getLocalSpots();
-  saveLocalSpots(current);
-  onUpdate(current);
+  // 1. Enviar estado de caché local inmediatamente para carga instantánea
+  const initial = getLocalSpots();
+  onUpdate(initial);
 
-  // 2. Escuchar cambios instantáneos locales entre pestañas o acciones
+  // 2. Escuchar cambios instantáneos entre pestañas en el mismo navegador
   const handleLocalChange = () => {
     const fresh = getLocalSpots();
     onUpdate(fresh);
@@ -156,7 +155,7 @@ export function subscribeToSpots(onUpdate: (spots: Spot[]) => void) {
     window.addEventListener("spots-updated", handleLocalChange);
   }
 
-  // 3. Conexión en tiempo real con Firestore
+  // 3. Conexión en tiempo real con Firestore (la fuente de verdad de la nube)
   let unsub: (() => void) | undefined;
   try {
     const spotsCol = collection(db, "spots");
@@ -168,26 +167,28 @@ export function subscribeToSpots(onUpdate: (spots: Spot[]) => void) {
           snapshot.forEach((docSnap) => {
             map.set(Number(docSnap.id), docSnap.data());
           });
-          const currentLocal = getLocalSpots();
+
+          // Firestore es la fuente de verdad definitiva para todos los dispositivos
           const merged = SPOTS.map((base) => {
             const remote = map.get(base.id);
-            const local = currentLocal.find((l) => l.id === base.id);
-            const withLocal = mergeSpotWithBase(base, local);
-            return mergeSpotWithBase(withLocal, remote);
+            return remote ? mergeSpotWithBase(base, remote) : base;
           });
+
           saveLocalSpots(merged);
           onUpdate(merged);
         } else {
-          // Si la colección está vacía en Firestore, inicializarla con los 18 espacios libres
-          initializeFirestoreSpots();
+          // Si Firestore está vacío, utilizamos los espacios base
+          const fallback = getLocalSpots();
+          onUpdate(fallback.length > 0 ? fallback : SPOTS);
         }
       },
-      () => {
+      (error) => {
+        console.warn("Aviso: listener de Firestore en modo fallback:", error.message);
         onUpdate(getLocalSpots());
       },
     );
-  } catch {
-    // Modo local seguro
+  } catch (err) {
+    console.warn("Aviso: no se pudo iniciar listener de Firestore:", err);
   }
 
   return () => {
@@ -211,12 +212,30 @@ export async function initializeFirestoreSpots() {
       await setDoc(ref, clean, { merge: true });
     }
   } catch (err) {
-    console.warn("Notice: Firestore database initialization warning:", err);
+    console.warn("Aviso al inicializar Firestore:", err);
   }
 }
 
 /**
+ * Sincroniza todos los 18 espacios actuales guardados en local directamente a Firestore.
+ * Esto asegura que cualquier personalización hecha en el ordenador suba a la nube para verse en móviles.
+ */
+export async function syncAllLocalSpotsToFirestore(): Promise<number> {
+  const current = getLocalSpots();
+  let count = 0;
+  for (const spot of current) {
+    const cleanData = sanitizeForFirestore(spot);
+    const ref = doc(db, "spots", String(spot.id));
+    await setDoc(ref, cleanData, { merge: true });
+    count++;
+  }
+  console.log(`[Firestore] ${count} espacios sincronizados con la nube.`);
+  return count;
+}
+
+/**
  * Actualiza la información de un espacio (precio, marca, logo, enlace).
+ * Guarda en caché local y sincroniza de forma segura en Firestore.
  */
 export async function updateSpot(spotId: number, data: Partial<Spot>) {
   const base = SPOTS.find((s) => s.id === spotId);
@@ -227,24 +246,22 @@ export async function updateSpot(spotId: number, data: Partial<Spot>) {
   const updated = current.map((s) => (s.id === spotId ? mergeSpotWithBase(base, { ...s, ...data }) : s));
   saveLocalSpots(updated);
 
-  // Notificar al instante a la pestaña actual y resto de pestañas (0 ms de espera)
+  // Notificar al instante a la pestaña actual y resto de pestañas
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("spots-updated", { detail: updated }));
   }
 
-  // 2. Sincronizar en Firestore con datos completos y sanitizados en segundo plano
+  // 2. Sincronizar en Firestore
+  const fullSpot = updated.find((s) => s.id === spotId);
+  const cleanData = sanitizeForFirestore(fullSpot);
+  const ref = doc(db, "spots", String(spotId));
+
   try {
-    const fullSpot = updated.find((s) => s.id === spotId);
-    const cleanData = sanitizeForFirestore(fullSpot);
-    const ref = doc(db, "spots", String(spotId));
-    await Promise.race([
-      setDoc(ref, cleanData, { merge: true }),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Firestore sync timeout")), 1500),
-      ),
-    ]);
-  } catch {
-    // Almacenado localmente con éxito e instantaneidad
+    await setDoc(ref, cleanData, { merge: true });
+    console.log(`[Firestore] Espacio #${spotId} guardado con éxito en la nube.`);
+  } catch (err) {
+    console.error(`[Firestore] Error al guardar espacio #${spotId} en la nube:`, err);
+    throw err;
   }
 }
 
@@ -449,14 +466,11 @@ export async function updateProfile(data: Partial<FounderProfile>) {
   try {
     const clean = sanitizeForFirestore(updated);
     const profileRef = doc(db, "settings", "profile");
-    await Promise.race([
-      setDoc(profileRef, clean, { merge: true }),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Firestore sync timeout")), 3500),
-      ),
-    ]);
+    await setDoc(profileRef, clean, { merge: true });
+    console.log("[Firestore] Perfil guardado con éxito en la nube.");
   } catch (err) {
-    console.warn("Firestore updateProfile sync:", err);
+    console.error("[Firestore] Error al sincronizar perfil:", err);
+    throw err;
   }
 }
 

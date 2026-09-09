@@ -56,6 +56,7 @@ import {
   resetDatabase,
   subscribeToProfile,
   updateProfile,
+  syncAllLocalSpotsToFirestore,
   DEFAULT_PROFILE,
   type Claim,
   type ClaimStatus,
@@ -98,6 +99,7 @@ function AdminDashboard() {
   const [editTagline, setEditTagline] = useState("");
   const [editTone, setEditTone] = useState<"dark" | "light" | "outline" | "transparent">("transparent");
   const [savingSpot, setSavingSpot] = useState(false);
+  const [syncingCloud, setSyncingCloud] = useState(false);
 
   // Diálogo de reinicio de base de datos
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -127,10 +129,10 @@ function AdminDashboard() {
     setSavingProfile(true);
     try {
       await updateProfile(profileForm);
-      toast.success("¡Perfil actualizado con éxito! La foto y datos se actualizaron en la web.");
+      toast.success("¡Perfil actualizado con éxito! La foto y datos se sincronizaron en la nube.");
     } catch (err) {
       console.error(err);
-      toast.error("Error al actualizar el perfil.");
+      toast.error("Error al actualizar el perfil en la nube.");
     } finally {
       setSavingProfile(false);
     }
@@ -170,11 +172,11 @@ function AdminDashboard() {
         brand: brandData,
       });
 
-      toast.success(`Espacio #${editingSpot.id} actualizado correctamente`);
+      toast.success(`¡Espacio #${editingSpot.id} guardado y sincronizado en la nube (Firestore)!`);
       setEditingSpot(null);
     } catch (err) {
-      console.error(err);
-      toast.error("Error al guardar los cambios del espacio.");
+      console.error("Error al sincronizar con la nube:", err);
+      toast.error("Error al guardar en la nube (Firestore). Revisa tu conexión.");
     } finally {
       setSavingSpot(false);
     }
@@ -864,14 +866,42 @@ function AdminDashboard() {
                     La aplicación está configurada para sincronizar datos en Firestore (colecciones <code>spots</code> y <code>claims</code>).
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm">
+                <CardContent className="space-y-4 text-sm">
                   <div className="rounded-lg bg-secondary/50 p-3 text-xs space-y-1">
                     <p className="font-semibold">ID del proyecto:</p>
                     <code className="text-primary">tu-logo-en-mi-mac</code>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Los cambios realizados en este panel se reflejan inmediatamente en la interfaz pública tanto para visitantes web como para la base de datos.
+                    Los cambios realizados en este panel se reflejan inmediatamente en la interfaz pública tanto para visitantes web como para la base de datos Firestore.
                   </p>
+                  <Button
+                    onClick={async () => {
+                      setSyncingCloud(true);
+                      try {
+                        const count = await syncAllLocalSpotsToFirestore();
+                        toast.success(`¡${count} espacios sincronizados en Firestore! Ahora cualquier celular o visitante verá los logos y marcas.`);
+                      } catch (err) {
+                        console.error(err);
+                        toast.error("Error al sincronizar con Firestore. Verifica tu conexión.");
+                      } finally {
+                        setSyncingCloud(false);
+                      }
+                    }}
+                    disabled={syncingCloud}
+                    className="w-full gap-2"
+                  >
+                    {syncingCloud ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Sincronizando con Firestore...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4" />
+                        Subir y Sincronizar Espacios a la Nube
+                      </>
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
 
